@@ -4,76 +4,72 @@ package com.example.triviumgor;
 //El ancho de pulso es prefijado a 4ms y la frecuenca a 10 Hz (aunque en Gor puede haber Gor1 (10Hz) y Gor2 (20Hz)
 
 import static android.graphics.Color.RED;
-    import static java.time.Instant.*;
+import static java.time.Instant.*;
 
-    import androidx.annotation.NonNull;
-    import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
-    import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-    import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-    import android.database.Cursor;
-    import android.graphics.Color;
-    import android.os.Build;
-    import android.os.Handler;
-    import android.view.View;
-    import android.widget.AdapterView;
-    import android.widget.ArrayAdapter;
-    import android.widget.ListView;
-    import android.widget.Spinner;
-    import android.widget.Switch;
-    import android.widget.TextView;
-    import android.widget.Button;
-    import android.bluetooth.BluetoothAdapter;
-    import android.bluetooth.BluetoothDevice;
-    import android.bluetooth.BluetoothSocket;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Handler;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Button;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 
-    import java.io.BufferedReader;
-    import java.io.InputStream;
-    import java.io.InputStreamReader;
-    import java.io.OutputStream;
-    import java.text.SimpleDateFormat;
-    import java.util.ArrayList;
-    import java.util.Set;
-    import java.util.UUID;
-    import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
+import java.io.IOException;
 
-    import android.widget.Toast;
-    import android.widget.EditText;
-    import android.util.Log;
-    import android.os.Bundle;
+import android.widget.Toast;
+import android.widget.EditText;
+import android.util.Log;
+import android.os.Bundle;
 
-    import java.time.Instant;
-    import java.time.ZoneId;
-    import java.time.ZonedDateTime;
-    import java.util.Calendar;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 
-    //import Kerman y Aitor
+//import Kerman y Aitor
 
 
-    import android.view.LayoutInflater;
+import android.view.LayoutInflater;
 
-    import androidx.appcompat.app.AlertDialog;
-    import androidx.core.app.ActivityCompat;
-    import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-    import com.example.triviumgor.database.PacienteDBHelper;
-    import com.example.triviumgor.database.PacienteDataManager;
+import com.example.triviumgor.database.PacienteDBHelper;
+import com.example.triviumgor.database.PacienteDataManager;
 
-    import android.view.KeyEvent;
-    import android.view.inputmethod.EditorInfo;
-    import android.Manifest;
-    import android.os.Environment;
-    import android.provider.Settings;
-    import android.net.Uri;
-
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
+import android.Manifest;
+import android.os.Environment;
+import android.provider.Settings;
+import android.net.Uri;
 
  public class MainActivity extends AppCompatActivity {
     String[] DirMacs = new String[10];
@@ -91,9 +87,6 @@ import android.content.pm.PackageManager;
     private BluetoothSocket btSocket;
     private BluetoothSocket btSocket2;
     private BluetoothSocket btSocket3;
-
-
-
     private static OutputStream outputStream = null;//ver si hace falta public static
     private static InputStream mInputStream = null;
     private static final OutputStream outputStream2 = null;//ver si hace falta public static
@@ -559,6 +552,7 @@ spinnerMAC.setAdapter(adapter);
         );
         */
         InicioPulsos = (Button) findViewById(R.id.button_IniPulsos);
+        InicioPulsos.setEnabled(false);
         InicioPulsos.setOnClickListener(new Button.OnClickListener() {
             int auxint1, auxint2, index = 0;
 
@@ -782,6 +776,7 @@ spinnerMAC.setAdapter(adapter);
             }
         });
         InicioPulsos2 = (Button) findViewById(R.id.button_IniPulsos2);
+        InicioPulsos2.setEnabled(false);
         InicioPulsos2.setOnClickListener(new Button.OnClickListener() {
             int auxint1, auxint2, index = 0;
 
@@ -1004,33 +999,23 @@ spinnerMAC.setAdapter(adapter);
 
         FinPulsos = (Button) findViewById(R.id.button_FinPulsos);
         FinPulsos.setOnClickListener(new Button.OnClickListener() {
-                                         public void onClick(View arg0) {
+            public void onClick(View arg0) {
+                try {
+                    if (IsConnected3) {
+                        miByteArrayWrite[0] = 0x43;
+                        outputStream3.write(miByteArrayWrite[0]);
+                        outputStream3.flush();
+                        IsClockStop = true;
 
-                                             try {
-
-                                                 if (IsConnected3) {
-                                                     InicioPulsos.setBackgroundColor(Color.BLUE);
-                                                     miByteArrayWrite[0] = 0x43;//"C"
-                                                     outputStream3.write(miByteArrayWrite[0]);
-                                                     outputStream3.flush();
-                                                     IsClockStop = true;
-
-
-
-                                                     //  Restaurar botón a estado inicial
-                                                     InicioPulsos.setText("INICIAR");
-                                                     InicioPulsos.setBackgroundColor(Color.BLUE);
-                                                     FinPulsos.setBackgroundColor(Color.RED);
-                                                 }
-
-                                             }catch (Exception createException) {
-                                                 Log.d("APP", "no hay datos de fecha");
-                                             }
-
-                                         }
-
-                                     }
-        );
+                        InicioPulsos.setText("Iniciar");
+                        InicioPulsos.setBackgroundColor(Color.BLUE);
+                        FinPulsos.setBackgroundColor(Color.RED);
+                    }
+                } catch (Exception createException) {
+                    Log.d("APP", "no hay datos de fecha");
+                }
+            }
+        });
 
         FinPulsos2 = (Button) findViewById(R.id.button_FinPulsos2);
         FinPulsos2.setOnClickListener(new Button.OnClickListener() {
@@ -1044,9 +1029,8 @@ spinnerMAC.setAdapter(adapter);
                         IsClockStop2 = true;
 
                         //  Restaurar botón a estado inicial
-                        InicioPulsos2.setText("INICIAR");
+                        InicioPulsos2.setText("Iniciar");
                         InicioPulsos2.setBackgroundColor(Color.BLUE);
-
                         FinPulsos2.setBackgroundColor(Color.RED);
                     }
                 } catch (Exception createException) {
@@ -1157,9 +1141,6 @@ spinnerMAC.setAdapter(adapter);
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(bluetoothDisconnectReceiver, filter);
-
-
-
 
     }
 
@@ -1529,13 +1510,11 @@ spinnerMAC.setAdapter(adapter);
 
             switch (opcion){
                 case "Dispositivo 1":
-                    try
-                    {
-                        if(IsConnected3){
-
-                            if (!IsClockStop){
-                                InicioPulsos.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                                miByteArrayWrite[0] = 0x43;//"C"
+                    try {
+                        if (IsConnected3) {
+                            if (!IsClockStop) {
+                                InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                                miByteArrayWrite[0] = 0x43;
                                 outputStream3.write(miByteArrayWrite[0]);
                                 outputStream3.flush();
                                 IsClockStop = true;
@@ -1547,33 +1526,28 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected3 = false;
 
-                            Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                            Conexion.setBackgroundColor(Color.BLUE);
                             Conexion.setTextColor(Color.WHITE);
                             Conexion.setText("Conectar");
+
+                            InicioPulsos.setEnabled(false);
+                            InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                            InicioPulsos.setText("Iniciar");
                         }
-
-
+                    } catch (IOException closeException) {
+                        Toast.makeText(this, "Error al Intentar Desconectar", Toast.LENGTH_LONG).show();
                     }
-                    catch(IOException closeException)
-                    {
-                        Toast.makeText(this,"Error al Intentar Desconectar",Toast.LENGTH_LONG).show();
-                    }
-
-
                     break;
 
                 case "Dispositivo 2":
-                    try
-                    {
-                        if(IsConnected){
-
-                            if (!IsClockStop2){
-                                InicioPulsos2.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                                miByteArrayWrite[0] = 0x43;//"C"
+                    try {
+                        if (IsConnected) {
+                            if (!IsClockStop2) {
+                                InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                                miByteArrayWrite[0] = 0x43;
                                 outputStream.write(miByteArrayWrite[0]);
                                 outputStream.flush();
                                 IsClockStop2 = true;
-                                //mConnectedThread=null;
                             }
 
                             btSocket.close();
@@ -1582,18 +1556,18 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected = false;
 
-                            Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                            Conexion2.setBackgroundColor(Color.BLUE);
                             Conexion2.setTextColor(Color.WHITE);
                             Conexion2.setText("Conectar");
 
-                            FinPulsos2.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                            InicioPulsos2.setEnabled(false);
+                            InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                            InicioPulsos2.setText("Iniciar");
+
+                            FinPulsos2.setBackgroundColor(Color.LTGRAY);
                         }
-
-
-                    }
-                    catch(IOException closeException)
-                    {
-                        Toast.makeText(this,"Error al Intentar Desconectar",Toast.LENGTH_LONG).show();
+                    } catch (IOException closeException) {
+                        Toast.makeText(this, "Error al Intentar Desconectar", Toast.LENGTH_LONG).show();
                     }
                     break;
 
@@ -2404,39 +2378,58 @@ spinnerMAC.setAdapter(adapter);
 
                  if (device != null) {
                      String mac = device.getAddress();
+                     Log.d("APP", "Dispositivo desconectado MAC: " + mac);
+                     Log.d("APP", "address3 (Disp1): " + address3);
+                     Log.d("APP", "address (Disp2): " + address);
 
                      // Dispositivo 1 (usa address3 y btSocket3)
-                     if (mac.equals(address3)) {
+                     if (mac.equals(address3) && IsConnected3) {
+                         Log.d("APP", "Desconexión detectada: Dispositivo 1");
                          if (mConnectedThread != null) {
                              mConnectedThread.cancel();
                              mConnectedThread = null;
-
+                         }
+                         try {
+                             if (btSocket3 != null) btSocket3.close();
+                         } catch (IOException e) {
+                             e.printStackTrace();
                          }
                          IsConnected3 = false;
+                         IsClockStop = true;
                          runOnUiThread(() -> {
-                             Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                             Conexion.setTextColor(Color.WHITE);
+                             Conexion.setBackgroundColor(Color.LTGRAY);
+                             Conexion.setBackgroundColor(Color.BLUE);
                              Conexion.setText("Conectar");
                              dispBluetoothNom1.setText("");
                              dispBluetoothNom1.setVisibility(View.GONE);
                              InicioPulsos.setEnabled(false);
-
+                             Conexion.setBackgroundColor(Color.BLUE);
+                             InicioPulsos.setText("Iniciar");
                          });
                      }
                      // Dispositivo 2 (usa address y btSocket)
-                     else if (mac.equals(address)) {
+                     else if (mac.equals(address) && IsConnected) {
+                         Log.d("APP", "Desconexión detectada: Dispositivo 2");
                          if (mConnectedThread2 != null) {
                              mConnectedThread2.cancel();
                              mConnectedThread2 = null;
                          }
+                         try {
+                             if (btSocket != null) btSocket.close();
+                         } catch (IOException e) {
+                             e.printStackTrace();
+                         }
                          IsConnected = false;
+                         IsClockStop2 = true;
                          runOnUiThread(() -> {
-                             Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                             Conexion2.setBackgroundColor(Color.BLUE);
                              Conexion2.setTextColor(Color.WHITE);
                              Conexion2.setText("Conectar");
                              dispBluetoothNom2.setText("");
                              dispBluetoothNom2.setVisibility(View.GONE);
                              InicioPulsos2.setEnabled(false);
+                             InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                             InicioPulsos2.setText("Iniciar");
                          });
                      }
                  }
@@ -2663,4 +2656,8 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
-}
+
+
+
+ }
+
