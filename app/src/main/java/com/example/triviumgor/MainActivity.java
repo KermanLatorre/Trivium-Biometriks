@@ -75,6 +75,8 @@ import android.view.View;
     import android.provider.Settings;
     import android.net.Uri;
 
+    //private int valor = 0; // Inicializar al declarar
+
 
  public class MainActivity extends AppCompatActivity {
     String[] DirMacs = new String[10];
@@ -1583,13 +1585,13 @@ spinnerMAC.setAdapter(adapter);
                             Conexion.setBackgroundColor(Color.BLUE);
                             Conexion.setTextColor(Color.WHITE);
                             Conexion.setText("Conectar");
-                        }
+
 
                             InicioPulsos.setEnabled(false);
                             InicioPulsos.setBackgroundColor(Color.LTGRAY);
                             InicioPulsos.setText("Iniciar");
                         }
-                    } catch (IOException closeException) {
+                    } catch (IOException e) {
                         Toast.makeText(this, "Error al Intentar Desconectar", Toast.LENGTH_LONG).show();
                     }
 
@@ -1622,7 +1624,7 @@ spinnerMAC.setAdapter(adapter);
                             InicioPulsos2.setBackgroundColor(Color.LTGRAY);
                             InicioPulsos2.setText("Iniciar");
 
-
+                        }
                     }
                     catch(IOException closeException)
                     {
@@ -2437,24 +2439,15 @@ spinnerMAC.setAdapter(adapter);
 
                  if (device != null) {
                      String mac = device.getAddress();
-                     Log.d("APP", "Dispositivo desconectado MAC: " + mac);
-                     Log.d("APP", "address3 (Disp1): " + address3);
-                     Log.d("APP", "address (Disp2): " + address);
 
                      // Dispositivo 1 (usa address3 y btSocket3)
-                     if (mac.equals(address3) && IsConnected3) {
-                         Log.d("APP", "Desconexión detectada: Dispositivo 1");
+                     if (mac.equals(address3)) {
                          if (mConnectedThread != null) {
                              mConnectedThread.cancel();
                              mConnectedThread = null;
-                         }
-                         try {
-                             if (btSocket3 != null) btSocket3.close();
-                         } catch (IOException e) {
-                             e.printStackTrace();
+
                          }
                          IsConnected3 = false;
-                         IsClockStop = true;
                          runOnUiThread(() -> {
                              Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
                              Conexion.setTextColor(Color.WHITE);
@@ -2477,7 +2470,6 @@ spinnerMAC.setAdapter(adapter);
                              e.printStackTrace();
                          }
                          IsConnected = false;
-                         IsClockStop2 = true;
                          runOnUiThread(() -> {
                              Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
                              Conexion2.setTextColor(Color.WHITE);
@@ -2485,8 +2477,6 @@ spinnerMAC.setAdapter(adapter);
                              dispBluetoothNom2.setText("");
                              dispBluetoothNom2.setVisibility(View.GONE);
                              InicioPulsos2.setEnabled(false);
-                             InicioPulsos2.setBackgroundColor(Color.LTGRAY);
-                             InicioPulsos2.setText("Iniciar");
                          });
                      }
                  }
@@ -2713,8 +2703,4 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
-
-
-
- }
-
+}
