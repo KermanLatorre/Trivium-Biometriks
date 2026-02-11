@@ -3,14 +3,14 @@ package com.example.triviumgor;
 public class Sesion {
     private int id;
     private int idPaciente;
-    private int dispositivo; // 1, 2, o 3 (ambos)
+    private String dispositivo; // 1, 2, o 3 (ambos)
     private String fecha;
     private int intensidad;
     private int tiempo;
 
 
     // Constructor completo
-    public Sesion(int id, int idPaciente, int dispositivo, String fecha, int intensidad, int tiempo) {
+    public Sesion(int id, int idPaciente, String dispositivo, String fecha, int intensidad, int tiempo) {
         this.id = id;
         this.idPaciente = idPaciente;
         this.dispositivo = dispositivo;
@@ -20,7 +20,7 @@ public class Sesion {
     }
 
     // Constructor sin ID (para inserciones)
-    public Sesion(int idPaciente, int dispositivo, String fecha, int intensidad, int tiempo) {
+    public Sesion(int idPaciente, String dispositivo, String fecha, int intensidad, int tiempo) {
         this.idPaciente = idPaciente;
         this.dispositivo = dispositivo;
         this.fecha = fecha;
@@ -47,11 +47,11 @@ public class Sesion {
         this.idPaciente = idPaciente;
     }
 
-    public int getDispositivo() {
+    public String getDispositivo() {
         return dispositivo;
     }
 
-    public void setDispositivo(int dispositivo) {
+    public void setDispositivo(String dispositivo) {
         this.dispositivo = dispositivo;
     }
 
@@ -84,6 +84,8 @@ public class Sesion {
 
 
     // Método para obtener el nombre del dispositivo en formato legible
+
+    /*
     public String getNombreDispositivo() {
         switch (dispositivo) {
             case 1:
@@ -97,5 +99,5 @@ public class Sesion {
             default:
                 return "Desconocido";
         }
-    }
+    }*/
 }

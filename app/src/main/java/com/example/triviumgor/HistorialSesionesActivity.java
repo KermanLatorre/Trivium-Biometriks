@@ -260,7 +260,7 @@ public class HistorialSesionesActivity extends AppCompatActivity {
         }
 
         // Configurar resto de datos
-        tvDispositivo.setText(sesion.getNombreDispositivo());
+        tvDispositivo.setText(sesion.getDispositivo());
         tvIntensidad.setText(String.valueOf(sesion.getIntensidad()));
         tvTiempo.setText(sesion.getTiempo() + " minutos");
 

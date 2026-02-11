@@ -257,7 +257,7 @@ public class PacienteDataManager {
      * @param tiempo Tiempo del tratamiento
      * @return ID de la sesión creada o -1 si hubo error
      */
-    public long registrarSesion(int idPaciente, int dispositivo, int intensidad, int tiempo) {
+    public long registrarSesion(int idPaciente, String dispositivo, int intensidad, int tiempo) {
         try {
             // Obtener fecha actual en formato ISO
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -306,7 +306,7 @@ public class PacienteDataManager {
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 int id = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_SESION_ID));
-                int dispositivo = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DISPOSITIVO));
+                String dispositivo = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DISPOSITIVO));
                 String fecha = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_FECHA));
                 int intensidad = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_INTENSIDAD_SESION));
                 int tiempo = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_TIEMPO_SESION));
@@ -341,7 +341,7 @@ public class PacienteDataManager {
         if (cursor != null && cursor.moveToFirst()) {
             int id = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_SESION_ID));
             int idPaciente = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_PACIENTE_ID));
-            int dispositivo = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DISPOSITIVO));
+            String dispositivo = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DISPOSITIVO));
             String fecha = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_FECHA));
             int intensidad = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_INTENSIDAD_SESION));
             int tiempo = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_TIEMPO_SESION));

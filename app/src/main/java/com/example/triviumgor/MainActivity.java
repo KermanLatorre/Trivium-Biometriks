@@ -4,72 +4,76 @@ package com.example.triviumgor;
 //El ancho de pulso es prefijado a 4ms y la frecuenca a 10 Hz (aunque en Gor puede haber Gor1 (10Hz) y Gor2 (20Hz)
 
 import static android.graphics.Color.RED;
-import static java.time.Instant.*;
+    import static java.time.Instant.*;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+    import androidx.annotation.NonNull;
+    import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
+    import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
+    import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Color;
-import android.os.Build;
-import android.os.Handler;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Button;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+    import android.database.Cursor;
+    import android.graphics.Color;
+    import android.os.Build;
+    import android.os.Handler;
+    import android.view.View;
+    import android.widget.AdapterView;
+    import android.widget.ArrayAdapter;
+    import android.widget.ListView;
+    import android.widget.Spinner;
+    import android.widget.Switch;
+    import android.widget.TextView;
+    import android.widget.Button;
+    import android.bluetooth.BluetoothAdapter;
+    import android.bluetooth.BluetoothDevice;
+    import android.bluetooth.BluetoothSocket;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.UUID;
-import java.io.IOException;
+    import java.io.BufferedReader;
+    import java.io.InputStream;
+    import java.io.InputStreamReader;
+    import java.io.OutputStream;
+    import java.text.SimpleDateFormat;
+    import java.util.ArrayList;
+    import java.util.Set;
+    import java.util.UUID;
+    import java.io.IOException;
 
-import android.widget.Toast;
-import android.widget.EditText;
-import android.util.Log;
-import android.os.Bundle;
+    import android.widget.Toast;
+    import android.widget.EditText;
+    import android.util.Log;
+    import android.os.Bundle;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Calendar;
+    import java.time.Instant;
+    import java.time.ZoneId;
+    import java.time.ZonedDateTime;
+    import java.util.Calendar;
 
-//import Kerman y Aitor
+    //import Kerman y Aitor
 
 
-import android.view.LayoutInflater;
+    import android.view.LayoutInflater;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+    import androidx.appcompat.app.AlertDialog;
+    import androidx.core.app.ActivityCompat;
+    import androidx.core.content.ContextCompat;
 
-import com.example.triviumgor.database.PacienteDBHelper;
-import com.example.triviumgor.database.PacienteDataManager;
+    import com.example.triviumgor.database.PacienteDBHelper;
+    import com.example.triviumgor.database.PacienteDataManager;
 
-import android.view.KeyEvent;
-import android.view.inputmethod.EditorInfo;
-import android.Manifest;
-import android.os.Environment;
-import android.provider.Settings;
-import android.net.Uri;
+    import android.view.KeyEvent;
+    import android.view.inputmethod.EditorInfo;
+    import android.Manifest;
+    import android.os.Environment;
+    import android.provider.Settings;
+    import android.net.Uri;
+
 
  public class MainActivity extends AppCompatActivity {
     String[] DirMacs = new String[10];
@@ -87,6 +91,9 @@ import android.net.Uri;
     private BluetoothSocket btSocket;
     private BluetoothSocket btSocket2;
     private BluetoothSocket btSocket3;
+
+
+
     private static OutputStream outputStream = null;//ver si hace falta public static
     private static InputStream mInputStream = null;
     private static final OutputStream outputStream2 = null;//ver si hace falta public static
@@ -599,14 +606,14 @@ spinnerMAC.setAdapter(adapter);
                                     if (opcionDispositivoInt == 3 && IsConnected) {
                                         idSesion = dataManager.registrarSesion(
                                                 idPaciente,
-                                                3,
+                                                dispBluetoothNom1.getText().toString(),
                                                 Intensidad,
                                                 Duracion_Min
                                         );
                                     } else {
                                         idSesion = dataManager.registrarSesion(
                                                 idPaciente,
-                                                1,
+                                                dispBluetoothNom1.getText().toString(),
                                                 Intensidad,
                                                 Duracion_Min
                                         );
@@ -822,14 +829,14 @@ spinnerMAC.setAdapter(adapter);
                                     if (opcionDispositivoInt == 3 && IsConnected3) {
                                         idSesion = dataManager.registrarSesion(
                                                 idPaciente,
-                                                4, // Dispositivo 2 con ambas conectadas
+                                                dispBluetoothNom2.getText().toString(), // Dispositivo 2 con ambas conectadas
                                                 Intensidad,
                                                 Duracion_Min2
                                         );
                                     } else {
                                         idSesion = dataManager.registrarSesion(
                                                 idPaciente,
-                                                2, // Dispositivo 2
+                                                dispBluetoothNom2.getText().toString(), // Dispositivo 2
                                                 Intensidad,
                                                 Duracion_Min2
                                         );
@@ -1150,6 +1157,9 @@ spinnerMAC.setAdapter(adapter);
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(bluetoothDisconnectReceiver, filter);
+
+
+
 
     }
 
@@ -2653,7 +2663,4 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
-
-
-
 }

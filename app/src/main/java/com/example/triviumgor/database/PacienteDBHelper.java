@@ -36,7 +36,7 @@ public class PacienteDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_SESIONES = "sesiones";
     public static final String COLUMN_SESION_ID = "_id";
     public static final String COLUMN_PACIENTE_ID = "paciente_id";
-    public static final String COLUMN_DISPOSITIVO = "dispositivo"; // 1, 2 o 3 (ambos)
+    public static final String COLUMN_DISPOSITIVO = "dispositivo";
     public static final String COLUMN_FECHA = "fecha";
     public static final String COLUMN_INTENSIDAD_SESION = "intensidad";
     public static final String COLUMN_TIEMPO_SESION = "tiempo";
