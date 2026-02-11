@@ -4,14 +4,12 @@ package com.example.triviumgor;
 //El ancho de pulso es prefijado a 4ms y la frecuenca a 10 Hz (aunque en Gor puede haber Gor1 (10Hz) y Gor2 (20Hz)
 
 import static android.graphics.Color.RED;
-    import static java.time.Instant.*;
+import static java.time.Instant.*;
 
-    import androidx.annotation.NonNull;
-    import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
-    import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -248,7 +246,7 @@ spinnerMAC.setAdapter(adapter);
      private SharedPreferences sharedPreferences;
 
 
-     //TERMINA CAMBIO
+    //TERMINA CAMBIO
 
 
 
@@ -564,6 +562,7 @@ spinnerMAC.setAdapter(adapter);
         );
         */
         InicioPulsos = (Button) findViewById(R.id.button_IniPulsos);
+        InicioPulsos.setEnabled(false);
         InicioPulsos.setOnClickListener(new Button.OnClickListener() {
             int auxint1, auxint2, index = 0;
 
@@ -787,6 +786,7 @@ spinnerMAC.setAdapter(adapter);
             }
         });
         InicioPulsos2 = (Button) findViewById(R.id.button_IniPulsos2);
+        InicioPulsos2.setEnabled(false);
         InicioPulsos2.setOnClickListener(new Button.OnClickListener() {
             int auxint1, auxint2, index = 0;
 
@@ -1049,7 +1049,7 @@ spinnerMAC.setAdapter(adapter);
                         IsClockStop2 = true;
 
                         //  Restaurar botón a estado inicial
-                        InicioPulsos2.setText("INICIAR");
+                        InicioPulsos2.setText("Iniciar");
                         InicioPulsos2.setBackgroundColor(Color.BLUE);
 
                         FinPulsos2.setBackgroundColor(Color.RED);
@@ -1564,13 +1564,11 @@ spinnerMAC.setAdapter(adapter);
 
             switch (opcion){
                 case "Dispositivo 1":
-                    try
-                    {
-                        if(IsConnected3){
-
-                            if (!IsClockStop){
-                                InicioPulsos.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                                miByteArrayWrite[0] = 0x43;//"C"
+                    try {
+                        if (IsConnected3) {
+                            if (!IsClockStop) {
+                                InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                                miByteArrayWrite[0] = 0x43;
                                 outputStream3.write(miByteArrayWrite[0]);
                                 outputStream3.flush();
                                 IsClockStop = true;
@@ -1582,29 +1580,28 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected3 = false;
 
-                            Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                            Conexion.setBackgroundColor(Color.BLUE);
                             Conexion.setTextColor(Color.WHITE);
                             Conexion.setText("Conectar");
                         }
 
-
-                    }
-                    catch(IOException closeException)
-                    {
-                        Toast.makeText(this,"Error al Intentar Desconectar",Toast.LENGTH_LONG).show();
+                            InicioPulsos.setEnabled(false);
+                            InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                            InicioPulsos.setText("Iniciar");
+                        }
+                    } catch (IOException closeException) {
+                        Toast.makeText(this, "Error al Intentar Desconectar", Toast.LENGTH_LONG).show();
                     }
 
 
                     break;
 
                 case "Dispositivo 2":
-                    try
-                    {
-                        if(IsConnected){
-
-                            if (!IsClockStop2){
-                                InicioPulsos2.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                                miByteArrayWrite[0] = 0x43;//"C"
+                    try {
+                        if (IsConnected) {
+                            if (!IsClockStop2) {
+                                InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                                miByteArrayWrite[0] = 0x43;
                                 outputStream.write(miByteArrayWrite[0]);
                                 outputStream.flush();
                                 IsClockStop2 = true;
@@ -1617,12 +1614,13 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected = false;
 
-                            Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                            Conexion2.setBackgroundColor(Color.BLUE);
                             Conexion2.setTextColor(Color.WHITE);
                             Conexion2.setText("Conectar");
 
-                            FinPulsos2.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                        }
+                            InicioPulsos2.setEnabled(false);
+                            InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                            InicioPulsos2.setText("Iniciar");
 
 
                     }
@@ -2439,15 +2437,24 @@ spinnerMAC.setAdapter(adapter);
 
                  if (device != null) {
                      String mac = device.getAddress();
+                     Log.d("APP", "Dispositivo desconectado MAC: " + mac);
+                     Log.d("APP", "address3 (Disp1): " + address3);
+                     Log.d("APP", "address (Disp2): " + address);
 
                      // Dispositivo 1 (usa address3 y btSocket3)
-                     if (mac.equals(address3)) {
+                     if (mac.equals(address3) && IsConnected3) {
+                         Log.d("APP", "Desconexión detectada: Dispositivo 1");
                          if (mConnectedThread != null) {
                              mConnectedThread.cancel();
                              mConnectedThread = null;
-
+                         }
+                         try {
+                             if (btSocket3 != null) btSocket3.close();
+                         } catch (IOException e) {
+                             e.printStackTrace();
                          }
                          IsConnected3 = false;
+                         IsClockStop = true;
                          runOnUiThread(() -> {
                              Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
                              Conexion.setTextColor(Color.WHITE);
@@ -2464,7 +2471,13 @@ spinnerMAC.setAdapter(adapter);
                              mConnectedThread2.cancel();
                              mConnectedThread2 = null;
                          }
+                         try {
+                             if (btSocket != null) btSocket.close();
+                         } catch (IOException e) {
+                             e.printStackTrace();
+                         }
                          IsConnected = false;
+                         IsClockStop2 = true;
                          runOnUiThread(() -> {
                              Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
                              Conexion2.setTextColor(Color.WHITE);
@@ -2472,6 +2485,8 @@ spinnerMAC.setAdapter(adapter);
                              dispBluetoothNom2.setText("");
                              dispBluetoothNom2.setVisibility(View.GONE);
                              InicioPulsos2.setEnabled(false);
+                             InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                             InicioPulsos2.setText("Iniciar");
                          });
                      }
                  }
@@ -2698,4 +2713,8 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
-}
+
+
+
+ }
+
