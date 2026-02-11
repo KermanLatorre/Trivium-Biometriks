@@ -1,29 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <!-- Permisos de Bluetooth para Android 11 y anteriores -->
-    <uses-permission android:name="android.permission.BLUETOOTH"
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Permisos de Bluetooth para Android 12+ -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- Permisos de Bluetooth para Android 12+ -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-
-    <!-- Si necesitas ubicación para Bluetooth -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-    <!-- Permisos de almacenamiento -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" /> <!-- Si necesitas ubicación para Bluetooth -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- Permisos de almacenamiento -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
     <application
@@ -32,16 +29,27 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/neurona_nw"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/neurona_nw"
         android:supportsRtl="true"
         android:theme="@style/Theme.triviumtab"
-        tools:targetApi="31"
-        android:requestLegacyExternalStorage="true">
+        tools:targetApi="31">
+        <!-- LoginActivity como actividad principal (LAUNCHER) -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- MainActivity como actividad secundaria -->
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="landscape"
-            android:exported="true"
-            android:launchMode="singleTop">
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -51,7 +59,7 @@
         <activity
             android:name=".ventanaPaciente"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTop" />
         <activity
             android:name=".HistorialSesionesActivity"
             android:exported="false">

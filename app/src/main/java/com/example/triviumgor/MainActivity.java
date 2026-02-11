@@ -18,12 +18,15 @@ import android.content.DialogInterface;
     import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
     import android.database.Cursor;
     import android.graphics.Color;
     import android.os.Build;
     import android.os.Handler;
-    import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
     import android.widget.AdapterView;
     import android.widget.ArrayAdapter;
     import android.widget.ListView;
@@ -242,8 +245,10 @@ spinnerMAC.setAdapter(adapter);
     private static final int ALL_FILES_ACCESS_CODE = 102;
     private static final int BLUETOOTH_PERMISSION_CODE = 103;
 
+     private SharedPreferences sharedPreferences;
 
-    //TERMINA CAMBIO
+
+     //TERMINA CAMBIO
 
 
 
@@ -1160,8 +1165,38 @@ spinnerMAC.setAdapter(adapter);
 
 
 
-
+        // Inicializar SharedPreferences
+        sharedPreferences = getSharedPreferences("LoginPrefs", MODE_PRIVATE);
     }
+
+     @Override
+     public boolean onCreateOptionsMenu(Menu menu) {
+         // Agregar opción de cerrar sesión en el menú
+         menu.add(0, 1, 0, "Cerrar Sesión");
+         return true;
+     }
+
+     @Override
+     public boolean onOptionsItemSelected(MenuItem item) {
+         if (item.getItemId() == 1) {
+             logout();
+             return true;
+         }
+         return super.onOptionsItemSelected(item);
+     }
+
+     private void logout() {
+         // Limpiar estado de login
+         SharedPreferences.Editor editor = sharedPreferences.edit();
+         editor.putBoolean("isLoggedIn", false);
+         editor.apply();
+
+         // Volver a LoginActivity
+         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+         startActivity(intent);
+         finish();
+     }
 
     private void checkStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

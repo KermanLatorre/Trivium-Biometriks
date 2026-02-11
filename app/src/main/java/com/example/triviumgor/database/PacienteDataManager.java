@@ -44,6 +44,195 @@ public class PacienteDataManager {
             dbHelper.close();
         }
 
+    // ======= MÉTODOS PARA AUTENTICACIÓN DE USUARIOS =======
+
+    /**
+     * Verifica las credenciales de un usuario
+     * @param username Nombre de usuario
+     * @param password Contraseña en texto plano
+     * @return true si las credenciales son válidas, false en caso contrario
+     */
+    public boolean verificarCredenciales(String username, String password) {
+        try {
+            String passwordHash = PacienteDBHelper.hashPassword(password);
+
+            Cursor cursor = database.query(
+                    PacienteDBHelper.TABLE_USUARIOS,
+                    new String[]{PacienteDBHelper.COLUMN_USUARIO_ID, PacienteDBHelper.COLUMN_ACTIVO},
+                    PacienteDBHelper.COLUMN_USERNAME + " = ? AND " +
+                            PacienteDBHelper.COLUMN_PASSWORD_HASH + " = ?",
+                    new String[]{username, passwordHash},
+                    null,
+                    null,
+                    null
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int activo = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ACTIVO));
+                int userId = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_USUARIO_ID));
+                cursor.close();
+
+                if (activo == 1) {
+                    // Actualizar último acceso
+                    actualizarUltimoAcceso(userId);
+                    return true;
+                }
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            return false;
+        } catch (Exception e) {
+            Log.e("PacienteDataManager", "Error al verificar credenciales: " + e.getMessage());
+            return false;
+        }
+    }
+    /**
+     * Obtiene información del usuario por username
+     * @param username Nombre de usuario
+     * @return Cursor con los datos del usuario o null
+     */
+    public Cursor obtenerUsuario(String username) {
+        return database.query(
+                PacienteDBHelper.TABLE_USUARIOS,
+                null,
+                PacienteDBHelper.COLUMN_USERNAME + " = ?",
+                new String[]{username},
+                null,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Crea un nuevo usuario en la base de datos
+     * @param username Nombre de usuario (único)
+     * @param password Contraseña en texto plano
+     * @param nombreCompleto Nombre completo del usuario
+     * @param rol Rol del usuario (admin, medico, enfermero, etc.)
+     * @return ID del usuario creado o -1 si hubo error
+     */
+    public long crearUsuario(String username, String password, String nombreCompleto, String rol) {
+        try {
+            String passwordHash = PacienteDBHelper.hashPassword(password);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String fechaActual = sdf.format(new Date());
+
+            ContentValues values = new ContentValues();
+            values.put(PacienteDBHelper.COLUMN_USERNAME, username);
+            values.put(PacienteDBHelper.COLUMN_PASSWORD_HASH, passwordHash);
+            values.put(PacienteDBHelper.COLUMN_NOMBRE_COMPLETO, nombreCompleto);
+            values.put(PacienteDBHelper.COLUMN_ROL, rol);
+            values.put(PacienteDBHelper.COLUMN_ACTIVO, 1);
+            values.put(PacienteDBHelper.COLUMN_FECHA_CREACION, fechaActual);
+
+            long id = database.insert(PacienteDBHelper.TABLE_USUARIOS, null, values);
+
+            if (id != -1) {
+                Log.d("PacienteDataManager", "Usuario creado: " + username);
+            } else {
+                Log.e("PacienteDataManager", "Error al crear usuario: " + username);
+            }
+
+            return id;
+        } catch (Exception e) {
+            Log.e("PacienteDataManager", "Error al crear usuario: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Cambia la contraseña de un usuario
+     * @param username Nombre de usuario
+     * @param newPassword Nueva contraseña
+     * @return true si se cambió correctamente, false en caso contrario
+     */
+    public boolean cambiarPassword(String username, String newPassword) {
+        try {
+            String passwordHash = PacienteDBHelper.hashPassword(newPassword);
+
+            ContentValues values = new ContentValues();
+            values.put(PacienteDBHelper.COLUMN_PASSWORD_HASH, passwordHash);
+
+            int rowsAffected = database.update(
+                    PacienteDBHelper.TABLE_USUARIOS,
+                    values,
+                    PacienteDBHelper.COLUMN_USERNAME + " = ?",
+                    new String[]{username}
+            );
+
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            Log.e("PacienteDataManager", "Error al cambiar contraseña: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza el timestamp de último acceso del usuario
+     */
+    private void actualizarUltimoAcceso(int userId) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String fechaActual = sdf.format(new Date());
+
+            ContentValues values = new ContentValues();
+            values.put(PacienteDBHelper.COLUMN_ULTIMO_ACCESO, fechaActual);
+
+            database.update(
+                    PacienteDBHelper.TABLE_USUARIOS,
+                    values,
+                    PacienteDBHelper.COLUMN_USUARIO_ID + " = ?",
+                    new String[]{String.valueOf(userId)}
+            );
+        } catch (Exception e) {
+            Log.e("PacienteDataManager", "Error al actualizar último acceso: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Activa o desactiva un usuario
+     * @param username Nombre de usuario
+     * @param activo true para activar, false para desactivar
+     * @return true si se actualizó correctamente
+     */
+    public boolean establecerEstadoUsuario(String username, boolean activo) {
+        try {
+            ContentValues values = new ContentValues();
+            values.put(PacienteDBHelper.COLUMN_ACTIVO, activo ? 1 : 0);
+
+            int rowsAffected = database.update(
+                    PacienteDBHelper.TABLE_USUARIOS,
+                    values,
+                    PacienteDBHelper.COLUMN_USERNAME + " = ?",
+                    new String[]{username}
+            );
+
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            Log.e("PacienteDataManager", "Error al cambiar estado de usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene todos los usuarios del sistema
+     * @return Lista de usuarios
+     */
+    public Cursor obtenerTodosUsuarios() {
+        return database.query(
+                PacienteDBHelper.TABLE_USUARIOS,
+                null,
+                null,
+                null,
+                null,
+                null,
+                PacienteDBHelper.COLUMN_NOMBRE_COMPLETO
+        );
+    }
+
     // ======= MÉTODOS PARA PACIENTES =======
 
         public long nuevoPaciente(String dni, String nombre, String apellido1, String apellido2,

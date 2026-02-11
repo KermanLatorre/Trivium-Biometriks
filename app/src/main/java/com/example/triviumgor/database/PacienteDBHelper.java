@@ -8,6 +8,8 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class PacienteDBHelper extends SQLiteOpenHelper {
 
@@ -30,6 +32,17 @@ public class PacienteDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TIEMPO = "tiempo";
     public static final String COLUMN_INTENSIDAD2 = "intensidad2";
     public static final String COLUMN_TIEMPO2 = "tiempo2";
+
+    // NUEVA Tabla USUARIOS
+    public static final String TABLE_USUARIOS = "usuarios";
+    public static final String COLUMN_USUARIO_ID = "_id";
+    public static final String COLUMN_USERNAME = "username";
+    public static final String COLUMN_PASSWORD_HASH = "password_hash";
+    public static final String COLUMN_NOMBRE_COMPLETO = "nombre_completo";
+    public static final String COLUMN_ROL = "rol"; // admin, medico, enfermero, etc.
+    public static final String COLUMN_ACTIVO = "activo"; // 1 = activo, 0 = inactivo
+    public static final String COLUMN_FECHA_CREACION = "fecha_creacion";
+    public static final String COLUMN_ULTIMO_ACCESO = "ultimo_acceso";
 
 
     // Nueva tabla de sesiones
@@ -58,12 +71,25 @@ public class PacienteDBHelper extends SQLiteOpenHelper {
                     COLUMN_INTENSIDAD2 + " INTEGER DEFAULT 0, " +
                     COLUMN_TIEMPO2 + " INTEGER DEFAULT 0)";
 
+    // SQL para crear tabla USUARIOS
+    private static final String SQL_CREATE_USUARIOS =
+            "CREATE TABLE " + TABLE_USUARIOS + " (" +
+                    COLUMN_USUARIO_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_USERNAME + " TEXT UNIQUE NOT NULL, " +
+                    COLUMN_PASSWORD_HASH + " TEXT NOT NULL, " +
+                    COLUMN_NOMBRE_COMPLETO + " TEXT, " +
+                    COLUMN_ROL + " TEXT DEFAULT 'medico', " +
+                    COLUMN_ACTIVO + " INTEGER DEFAULT 1, " +
+                    COLUMN_FECHA_CREACION + " TEXT NOT NULL, " +
+                    COLUMN_ULTIMO_ACCESO + " TEXT)";
+
+
     // Sentencia SQL para crear la tabla sesiones
     private static final String SQL_CREATE_SESIONES =
             "CREATE TABLE " + TABLE_SESIONES + " (" +
                     COLUMN_SESION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_PACIENTE_ID + " INTEGER NOT NULL, " +
-                    COLUMN_DISPOSITIVO + " INTEGER NOT NULL, " +
+                    COLUMN_DISPOSITIVO + " TEXT NOT NULL, " +
                     COLUMN_FECHA + " TEXT NOT NULL, " +
                     COLUMN_INTENSIDAD_SESION + " INTEGER NOT NULL, " +
                     COLUMN_TIEMPO_SESION + " INTEGER NOT NULL, " +
@@ -121,6 +147,11 @@ public class PacienteDBHelper extends SQLiteOpenHelper {
         // Este método se llama cuando la base de datos se crea por primera vez
         db.execSQL(SQL_CREATE_PACIENTES);
         db.execSQL(SQL_CREATE_SESIONES);
+        db.execSQL(SQL_CREATE_USUARIOS);
+
+        // Insertar usuario administrador por defecto
+        insertarUsuarioAdmin(db);
+
         //insertarPacientesIniciales(db);  //esto es para que no te salga lleno
         Log.d("PacienteDBHelper", "Base de datos creada en: " + DATABASE_PATH);
     }
@@ -135,12 +166,78 @@ public class PacienteDBHelper extends SQLiteOpenHelper {
 public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     // Este método se llama cuando se actualiza la versión de la base de datos
     if (oldVersion < 2) {
-        // Si actualizamos de la versión 1 a la 2, creamos la tabla sesiones
-        db.execSQL(SQL_CREATE_SESIONES);
-        Log.d("PacienteDBHelper", "Tabla sesiones creada en actualización de base de datos");
+        // Actualización de versión 1 a 2: crear tabla sesiones y usuarios
+        try {
+            db.execSQL(SQL_CREATE_SESIONES);
+            Log.d("PacienteDBHelper", "Tabla sesiones creada en actualización de base de datos");
+        } catch (Exception e) {
+            Log.e("PacienteDBHelper", "Error al crear tabla sesiones: " + e.getMessage());
+        }
+
+        try {
+            db.execSQL(SQL_CREATE_USUARIOS);
+            insertarUsuarioAdmin(db);
+            Log.d("PacienteDBHelper", "Tabla usuarios creada en actualización de base de datos");
+        } catch (Exception e) {
+            Log.e("PacienteDBHelper", "Error al crear tabla usuarios: " + e.getMessage());
+        }
     }
 }
 
+    /**
+     * Inserta un usuario administrador por defecto
+     */
+    private void insertarUsuarioAdmin(SQLiteDatabase db) {
+        try {
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_USERNAME, "admin");
+            values.put(COLUMN_PASSWORD_HASH, hashPassword("admin123")); // Contraseña: admin123
+            values.put(COLUMN_NOMBRE_COMPLETO, "Administrador");
+            values.put(COLUMN_ROL, "admin");
+            values.put(COLUMN_ACTIVO, 1);
+            values.put(COLUMN_FECHA_CREACION, getCurrentDateTime());
+
+            long id = db.insert(TABLE_USUARIOS, null, values);
+
+            if (id != -1) {
+                Log.d("PacienteDBHelper", "Usuario administrador creado con éxito");
+            } else {
+                Log.e("PacienteDBHelper", "Error al crear usuario administrador");
+            }
+        } catch (Exception e) {
+            Log.e("PacienteDBHelper", "Error al insertar usuario admin: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera hash SHA-256 de una contraseña
+     */
+    public static String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            Log.e("PacienteDBHelper", "Error al hashear contraseña: " + e.getMessage());
+            return password; // Fallback (NO RECOMENDADO EN PRODUCCIÓN)
+        }
+    }
+
+    /**
+     * Obtiene la fecha y hora actual en formato ISO
+     */
+    private String getCurrentDateTime() {
+        return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                java.util.Locale.getDefault()).format(new java.util.Date());
+    }
 
 
 
