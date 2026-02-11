@@ -10,8 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -1145,6 +1148,9 @@ spinnerMAC.setAdapter(adapter);
         });
 
 
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        registerReceiver(bluetoothDisconnectReceiver, filter);
+
     }
 
     private void checkStoragePermissions() {
@@ -1831,6 +1837,7 @@ spinnerMAC.setAdapter(adapter);
                     Conexion.setBackgroundColor(Color.YELLOW);
                     Conexion.setTextColor(Color.BLACK);
                     Conexion.setText("conectado");
+                    InicioPulsos.setEnabled(true);
 
                     String nomBlueDis = device.getName() + "(" + device.getAddress().substring(device.getAddress().length() -5, device.getAddress().length()) +")";
 
@@ -1870,6 +1877,7 @@ spinnerMAC.setAdapter(adapter);
                     Conexion2.setBackgroundColor(Color.YELLOW);
                     Conexion2.setTextColor(Color.BLACK);
                     Conexion2.setText("conectado");
+                    InicioPulsos2.setEnabled(true);
 
                     String nomBlueDis2 = device.getName() + "(" + device.getAddress().substring(device.getAddress().length() -5, device.getAddress().length()) +")";
 
@@ -2176,6 +2184,11 @@ spinnerMAC.setAdapter(adapter);
     @Override
     public void onDestroy()
     {
+        try {
+            unregisterReceiver(bluetoothDisconnectReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         try
         {
             if(IsConnected)
@@ -2198,6 +2211,8 @@ spinnerMAC.setAdapter(adapter);
         }
         this.finish();
         super.onDestroy();
+
+
     }
     @SuppressLint("MissingPermission")
     public void connectToDevice() {
@@ -2369,8 +2384,67 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
+
+     private final BroadcastReceiver bluetoothDisconnectReceiver = new BroadcastReceiver() {
+         @Override
+         public void onReceive(Context context, Intent intent) {
+             String action = intent.getAction();
+             if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+                 if (device != null) {
+                     String mac = device.getAddress();
+
+                     // Dispositivo 1 (usa address3 y btSocket3)
+                     if (mac.equals(address3)) {
+                         if (mConnectedThread != null) {
+                             mConnectedThread.cancel();
+                             mConnectedThread = null;
+
+                         }
+                         IsConnected3 = false;
+                         runOnUiThread(() -> {
+                             Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                             Conexion.setTextColor(Color.WHITE);
+                             Conexion.setText("Conectar");
+                             dispBluetoothNom1.setText("");
+                             dispBluetoothNom1.setVisibility(View.GONE);
+                             InicioPulsos.setEnabled(false);
+
+                         });
+                     }
+                     // Dispositivo 2 (usa address y btSocket)
+                     else if (mac.equals(address)) {
+                         if (mConnectedThread2 != null) {
+                             mConnectedThread2.cancel();
+                             mConnectedThread2 = null;
+                         }
+                         IsConnected = false;
+                         runOnUiThread(() -> {
+                             Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
+                             Conexion2.setTextColor(Color.WHITE);
+                             Conexion2.setText("Conectar");
+                             dispBluetoothNom2.setText("");
+                             dispBluetoothNom2.setVisibility(View.GONE);
+                             InicioPulsos2.setEnabled(false);
+                         });
+                     }
+                 }
+             }
+         }
+     };
     private class ConnectedThread extends Thread
     {
+        public void cancel() {
+            try {
+                IsBattMon3 = false;
+                if (mInputStream3 != null) {
+                    mInputStream3.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         public void run()
         {
             byte[] buffer = new byte[8];
@@ -2470,6 +2544,17 @@ spinnerMAC.setAdapter(adapter);
 
     private class ConnectedThread2 extends Thread
     {
+        public void cancel() {
+            try {
+                IsBattMon = false;
+                if (mInputStream != null) {
+                    mInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         public void run()
         {
             byte[] buffer = new byte[28];
@@ -2568,6 +2653,7 @@ spinnerMAC.setAdapter(adapter);
         }
 
     }
+
 
 
 }
