@@ -555,206 +555,219 @@ spinnerMAC.setAdapter(adapter);
             public void onClick(View arg0) {
                 try {
                     if (IsConnected3) {
-                        // Cambiar color del botón para indicar activación
                         InicioPulsos.setBackgroundColor(Color.GREEN);
-                        FinPulsos.setBackgroundColor(ventanaPaciente.getHighlightColor());
 
-                        // Obtener parámetros de los campos de texto primero
                         Intensidad = Integer.parseInt(Param3.getText().toString());
                         Duracion_Min = Integer.parseInt(Param4.getText().toString());
 
-                        // Registrar la sesión en la base de datos si hay un paciente seleccionado
-                        if (nombreDispositivoPac1 != null && nombreDispositivoPac1.getText() != null
-                                && !nombreDispositivoPac1.getText().toString().isEmpty()
-                                && DNIpaciente != null && !DNIpaciente.isEmpty()) {
+                        // Detectar si hay una sesión activa
+                        boolean sesionActiva = !IsClockStop;
 
-                            // Obtener el ID del paciente usando el DNI
-                            Cursor cursor = dataManager.obtenerTodosPacientes();
-                            int idPaciente = -1;
+                        if (sesionActiva) {
+                            // HAY SESIÓN ACTIVA: Solo actualizar intensidad
+                            Log.d("APP", "Actualizando intensidad en sesión activa");
+                            Log.d("APP", "Tiempo transcurrido: " + minutotranscurrido + " min");
 
-                            if (cursor != null && cursor.moveToFirst()) {
-                                do {
-                                    String dni = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DNI));
-                                    if (dni.equals(DNIpaciente)) {
-                                        idPaciente = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ID));
-                                        break;
+                            Toast.makeText(MainActivity.this,
+                                    "Actualizando intensidad a " + Intensidad,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            // NO HAY SESIÓN ACTIVA: Es una sesión nueva
+                            Log.d("APP", "Iniciando nueva sesión");
+
+                            // Registrar la sesión en la base de datos
+                            if (DNIpaciente != null && !DNIpaciente.isEmpty()) {
+                                Cursor cursor = dataManager.obtenerTodosPacientes();
+                                int idPaciente = -1;
+
+                                if (cursor != null && cursor.moveToFirst()) {
+                                    do {
+                                        String dni = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DNI));
+                                        if (dni.equals(DNIpaciente)) {
+                                            idPaciente = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ID));
+                                            break;
+                                        }
+                                    } while (cursor.moveToNext());
+                                    cursor.close();
+                                }
+
+                                if (idPaciente != -1) {
+                                    long idSesion = -1;
+                                    if (opcionDispositivoInt == 3 && IsConnected) {
+                                        idSesion = dataManager.registrarSesion(
+                                                idPaciente,
+                                                3,
+                                                Intensidad,
+                                                Duracion_Min
+                                        );
+                                    } else {
+                                        idSesion = dataManager.registrarSesion(
+                                                idPaciente,
+                                                1,
+                                                Intensidad,
+                                                Duracion_Min
+                                        );
                                     }
-                                } while (cursor.moveToNext());
-                                cursor.close();
-                            }
 
-                            if (idPaciente != -1) {
-                                // Registrar la sesión con el dispositivo correspondiente
-                                long idSesion = -1;
-                                if (opcionDispositivoInt == 3 && IsConnected) {
-                                    idSesion = dataManager.registrarSesion(
-                                            idPaciente,
-                                            3, // Dispositivo 1 con ambas
-                                            Intensidad,
-                                            Duracion_Min
-                                    );
-                                } else {
-                                    idSesion = dataManager.registrarSesion(
-                                            idPaciente,
-                                            1, // Dispositivo 1
-                                            Intensidad,
-                                            Duracion_Min
-                                    );
-                                }
-
-                                if (idSesion != -1) {
-                                    Toast.makeText(MainActivity.this,
-                                            "Sesión registrada correctamente", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Log.e("MainActivity", "Error al registrar la sesión");
+                                    if (idSesion != -1) {
+                                        Toast.makeText(MainActivity.this,
+                                                "Sesión registrada correctamente",
+                                                Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Log.e("MainActivity", "Error al registrar la sesión");
+                                    }
                                 }
                             }
+
+                            // RESETEAR temporizador SOLO si es sesión nueva
+                            minutotranscurrido = 0;
                         }
 
-                        // Inicializar el índice y variables para el envío de datos
+                        // Preparar datos a enviar (común para ambos casos)
                         index = 0;
-                        minutotranscurrido = 0;
-
-                        // Preparar los datos a enviar al dispositivo
-                        miByteArrayWrite[index] = 0x41;//primer byte "A" modoNOSync
+                        miByteArrayWrite[index] = 0x41;
                         index++;
 
-                        // Configurar ancho de pulso (4ms)
+                        // Ancho de pulso (4ms)
                         AnchoPulso = 4;
-                        auxint1 = AnchoPulso / 1000;//unidad de mil
-                        auxint2 = AnchoPulso % 1000;//resto para ecntenas
+                        auxint1 = AnchoPulso / 1000;
+                        auxint2 = AnchoPulso % 1000;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Repetir configuración de ancho de pulso (duplicado en el código original)
+                        // Repetir ancho de pulso
                         AnchoPulso = 4;
-                        auxint1 = AnchoPulso / 1000;//unidad de mil
-                        auxint2 = AnchoPulso % 1000;//resto para ecntenas
+                        auxint1 = AnchoPulso / 1000;
+                        auxint2 = AnchoPulso % 1000;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-
-                        // Configurar periodo entre pulsos (100ms = 10Hz)
-                        Periodo_ms = 100;//freq fija 10 o 20 Hz
-                        auxint1 = Periodo_ms / 1000;//unidad de mil
-                        auxint2 = Periodo_ms % 1000;//resto para ecntenas
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-
-                        // Repetir configuración de periodo (duplicado en el código original)
-                        auxint1 = Periodo_ms / 1000;//unidad de mil
-                        auxint2 = Periodo_ms % 1000;//resto para ecntenas
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Añadir intensidad al array de bytes a enviar
-                        auxint1 = Intensidad / 10;//para decenas
+                        // Periodo (100ms = 10Hz)
+                        Periodo_ms = 100;
+                        auxint1 = Periodo_ms / 1000;
+                        auxint2 = Periodo_ms % 1000;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+
+                        // Repetir periodo
+                        auxint1 = Periodo_ms / 1000;
+                        auxint2 = Periodo_ms % 1000;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+
+                        // Intensidad (ACTUALIZADA)
+                        auxint1 = Intensidad / 10;
                         auxint2 = Intensidad % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Repetir intensidad (duplicado en el código original)
-                        auxint1 = Intensidad / 10;//para decenas
+                        // Repetir intensidad
+                        auxint1 = Intensidad / 10;
                         auxint2 = Intensidad % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Añadir duración al array de bytes a enviar
-                        auxint1 = Duracion_Min / 10;//para decenas
+                        // Duración
+                        auxint1 = Duracion_Min / 10;
                         auxint2 = Duracion_Min % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Marcar fin de envío de parámetros
-                        miByteArrayWrite[index] = 66;//"B"Fin envio parametros
+                        miByteArrayWrite[index] = 66; // "B"
                         index++;
 
-                        // Enviar todos los bytes al dispositivo
+                        // Enviar al dispositivo
                         for (int t = 0; t < index; t++) {
                             outputStream3.write(miByteArrayWrite[t]);
                             outputStream3.flush();
-                            for (int s = 60000; s > 0; s--) ;
+                            for (int s = 60000; s > 0; s--);
                         }
 
-                        // Iniciar monitoreo del dispositivo
-                        IsBattMon3 = true;
-                        IndiceRec = 0;
-                        IsClockStop = false;
-                        N_Bytes = 0;
-                        TimeHandler.postDelayed(CheckTimer, 20000);
-                        Log.d("APP", "InicioThread connected");
-                        mConnectedThread = new ConnectedThread();
-                        mConnectedThread.start();
+                        // Iniciar timer SOLO si es sesión nueva
+                        if (!sesionActiva) {
+                            IsBattMon3 = true;
+                            IndiceRec = 0;
+                            IsClockStop = false;
+                            N_Bytes = 0;
+                            TimeHandler.postDelayed(CheckTimer, 20000);
+                            Log.d("APP", "InicioThread connected");
+                            mConnectedThread = new ConnectedThread();
+                            mConnectedThread.start();
+
+                            //  CAMBIAR TEXTO DEL BOTÓN A "ACTUALIZAR"
+                            InicioPulsos.setText("Actualizar");
+                        }
                     }
                 } catch (Exception createException) {
-                    Log.d("APP", "no hay datos de fecha");
+                    Log.d("APP", "Error: " + createException.getMessage());
                 }
             }
         });
@@ -765,202 +778,216 @@ spinnerMAC.setAdapter(adapter);
             public void onClick(View arg0) {
                 try {
                     if (IsConnected) {
-                        // Cambiar color del botón para indicar activación
                         InicioPulsos2.setBackgroundColor(Color.GREEN);
 
-                        // Obtener parámetros de los campos de texto primero
                         Intensidad = Integer.parseInt(Param10.getText().toString());
                         Duracion_Min2 = Integer.parseInt(Param12.getText().toString());
 
-                        // Registrar la sesión en la base de datos si hay un paciente seleccionado
-                        if (DNIpaciente2 != null && !DNIpaciente2.isEmpty()) {
-                            // Obtener el ID del paciente usando el DNI
-                            Cursor cursor = dataManager.obtenerTodosPacientes();
-                            int idPaciente = -1;
+                        //  NUEVO: Detectar si hay una sesión activa
+                        boolean sesionActiva = !IsClockStop2;
 
-                            if (cursor != null && cursor.moveToFirst()) {
-                                do {
-                                    String dni = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DNI));
-                                    if (dni.equals(DNIpaciente2)) {
-                                        idPaciente = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ID));
-                                        break;
+                        if (sesionActiva) {
+                            // HAY SESIÓN ACTIVA: Solo actualizar intensidad
+                            Log.d("APP", "Actualizando intensidad en sesión activa (Dispositivo 2)");
+                            Log.d("APP", "Tiempo transcurrido: " + minutotranscurrido2 + " min");
+
+                            Toast.makeText(MainActivity.this,
+                                    "Actualizando intensidad a " + Intensidad,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            // NO HAY SESIÓN ACTIVA: Es una sesión nueva
+                            Log.d("APP", "Iniciando nueva sesión (Dispositivo 2)");
+
+                            // Registrar la sesión en la base de datos
+                            if (DNIpaciente2 != null && !DNIpaciente2.isEmpty()) {
+                                Cursor cursor = dataManager.obtenerTodosPacientes();
+                                int idPaciente = -1;
+
+                                if (cursor != null && cursor.moveToFirst()) {
+                                    do {
+                                        String dni = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_DNI));
+                                        if (dni.equals(DNIpaciente2)) {
+                                            idPaciente = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ID));
+                                            break;
+                                        }
+                                    } while (cursor.moveToNext());
+                                    cursor.close();
+                                }
+
+                                if (idPaciente != -1) {
+                                    long idSesion = -1;
+                                    if (opcionDispositivoInt == 3 && IsConnected3) {
+                                        idSesion = dataManager.registrarSesion(
+                                                idPaciente,
+                                                4, // Dispositivo 2 con ambas conectadas
+                                                Intensidad,
+                                                Duracion_Min2
+                                        );
+                                    } else {
+                                        idSesion = dataManager.registrarSesion(
+                                                idPaciente,
+                                                2, // Dispositivo 2
+                                                Intensidad,
+                                                Duracion_Min2
+                                        );
                                     }
-                                } while (cursor.moveToNext());
-                                cursor.close();
-                            }
 
-                            if (idPaciente != -1) {
-                                // Registrar la sesión con el dispositivo 2
-                                long idSesion = -1;
-                                if (opcionDispositivoInt == 3 && IsConnected3){
-                                    idSesion = dataManager.registrarSesion(
-                                            idPaciente,
-                                            4, // Dispositivo 2 con ambas conectadas
-                                            Intensidad,
-                                            Duracion_Min2
-                                    );
-                                } else {
-                                    idSesion = dataManager.registrarSesion(
-                                            idPaciente,
-                                            2, // Dispositivo 2
-                                            Intensidad,
-                                            Duracion_Min2
-                                    );
-                                }
-
-                                if (idSesion != -1) {
-                                    Toast.makeText(MainActivity.this,
-                                            "Sesión registrada correctamente", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Log.e("MainActivity", "Error al registrar la sesión");
+                                    if (idSesion != -1) {
+                                        Toast.makeText(MainActivity.this,
+                                                "Sesión registrada correctamente",
+                                                Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Log.e("MainActivity", "Error al registrar la sesión");
+                                    }
                                 }
                             }
+
+                            //  RESETEAR temporizador SOLO si es sesión nueva
+                            minutotranscurrido2 = 0;
                         }
 
-                        // Inicializar el índice y variables para el envío de datos
+                        // Preparar datos a enviar (común para ambos casos)
                         index = 0;
-                        minutotranscurrido2 = 0;
-
-                        // Preparar los datos a enviar al dispositivo
-                        miByteArrayWrite[index] = 0x41;//primer byte "A" modoNOSync
+                        miByteArrayWrite[index] = 0x41;
                         index++;
 
-                        // Configurar ancho de pulso (4ms)
+                        // Ancho de pulso (4ms)
                         AnchoPulso = 4;
-                        auxint1 = AnchoPulso / 1000;//unidad de mil
-                        auxint2 = AnchoPulso % 1000;//resto para ecntenas
+                        auxint1 = AnchoPulso / 1000;
+                        auxint2 = AnchoPulso % 1000;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-
-                        // Repetir configuración de ancho de pulso (duplicado en el código original)
-                        auxint1 = AnchoPulso / 1000;//unidad de mil
-                        auxint2 = AnchoPulso % 1000;//resto para ecntenas
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-
-                        // Configurar periodo entre pulsos (100ms = 10Hz)
-                        Periodo_ms = 100;//freq fija 10 o 20 Hz
-                        auxint1 = Periodo_ms / 1000;//unidad de mil
-                        auxint2 = Periodo_ms % 1000;//resto para ecntenas
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
-                        miByteArrayWrite[index] = auxint1;
-                        index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Repetir configuración de periodo (duplicado en el código original)
-                        auxint1 = Periodo_ms / 1000;//unidad de mil
-                        auxint2 = Periodo_ms % 1000;//resto para ecntenas
+                        // Repetir ancho de pulso
+                        auxint1 = AnchoPulso / 1000;
+                        auxint2 = AnchoPulso % 1000;
                         auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 100;//para centenas
-                        auxint2 = auxint2 % 100;//resto para decenas
-                        auxint1 = auxint1 + 0x30;//centenas
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 / 10;//para decenas
-                        auxint2 = auxint2 % 10;//resto para unidades
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Añadir intensidad al array de bytes a enviar
-                        auxint1 = Intensidad / 10;//para decenas
+                        // Periodo (100ms = 10Hz)
+                        Periodo_ms = 100;
+                        auxint1 = Periodo_ms / 1000;
+                        auxint2 = Periodo_ms % 1000;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+
+                        // Repetir periodo
+                        auxint1 = Periodo_ms / 1000;
+                        auxint2 = Periodo_ms % 1000;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 100;
+                        auxint2 = auxint2 % 100;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 / 10;
+                        auxint2 = auxint2 % 10;
+                        auxint1 = auxint1 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+                        auxint1 = auxint2 + 0x30;
+                        miByteArrayWrite[index] = auxint1;
+                        index++;
+
+                        // Intensidad (ACTUALIZADA)
+                        auxint1 = Intensidad / 10;
                         auxint2 = Intensidad % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Repetir intensidad (duplicado en el código original)
-                        auxint1 = Intensidad / 10;//para decenas
+                        // Repetir intensidad
+                        auxint1 = Intensidad / 10;
                         auxint2 = Intensidad % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Añadir duración al array de bytes a enviar
-                        auxint1 = Duracion_Min2 / 10;//para decenas
+                        // Duración
+                        auxint1 = Duracion_Min2 / 10;
                         auxint2 = Duracion_Min2 % 10;
-                        auxint1 = auxint1 + 0x30;//decenas
+                        auxint1 = auxint1 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
-                        auxint1 = auxint2 + 0x30;//unidades
+                        auxint1 = auxint2 + 0x30;
                         miByteArrayWrite[index] = auxint1;
                         index++;
 
-                        // Marcar fin de envío de parámetros
-                        miByteArrayWrite[index] = 66;//"B"Fin envio parametros
+                        miByteArrayWrite[index] = 66; // "B"
                         index++;
 
-                        // Enviar todos los bytes al dispositivo
+                        // Enviar al dispositivo
                         for (int t = 0; t < index; t++) {
                             outputStream.write(miByteArrayWrite[t]);
                             outputStream.flush();
-                            for (int s = 60000; s > 0; s--) ;
+                            for (int s = 60000; s > 0; s--);
                         }
 
-                        // Iniciar monitoreo del dispositivo
-                        IsBattMon = true;
-                        IsBattMon3 = false;
-                        IsClockStop2 = false;
-                        N_Bytes = 0;
-                        TimeHandler2.postDelayed(CheckTimer2, 20000);
-                        Log.d("APP", "InicioThread2 connected");
-                        IndiceRec = 0;
-                        mConnectedThread2 = new ConnectedThread2();
-                        mConnectedThread2.start();
+                        // ⭐ Iniciar timer SOLO si es sesión nueva
+                        if (!sesionActiva) {
+                            IsBattMon = true;
+                            IndiceRec = 0;
+                            IsClockStop2 = false;
+                            N_Bytes = 0;
+                            TimeHandler2.postDelayed(CheckTimer2, 20000);
+                            Log.d("APP", "InicioThread2 connected");
+                            mConnectedThread2 = new ConnectedThread2();
+                            mConnectedThread2.start();
+                            InicioPulsos2.setText("Actualizar");
+                        }
                     }
                 } catch (Exception createException) {
-                    Log.d("APP", "no hay datos de fecha");
+                    Log.d("APP", "Error: " + createException.getMessage());
                 }
             }
         });
@@ -977,9 +1004,13 @@ spinnerMAC.setAdapter(adapter);
                                                      outputStream3.write(miByteArrayWrite[0]);
                                                      outputStream3.flush();
                                                      IsClockStop = true;
-                                                     //mConnectedThread=null;
-                                                     FinPulsos.setBackgroundColor(Color.RED);
 
+
+
+                                                     //  Restaurar botón a estado inicial
+                                                     InicioPulsos.setText("INICIAR");
+                                                     InicioPulsos.setBackgroundColor(Color.BLUE);
+                                                     FinPulsos.setBackgroundColor(Color.RED);
                                                  }
 
                                              }catch (Exception createException) {
@@ -993,26 +1024,26 @@ spinnerMAC.setAdapter(adapter);
 
         FinPulsos2 = (Button) findViewById(R.id.button_FinPulsos2);
         FinPulsos2.setOnClickListener(new Button.OnClickListener() {
-                                          public void onClick(View arg0) {
-                                              try {
-                                                  if (IsConnected) {
-                                                      InicioPulsos2.setBackgroundColor(Color.BLUE);
-                                                      miByteArrayWrite[0] = 0x43;//"C"
-                                                      outputStream.write(miByteArrayWrite[0]);
-                                                      outputStream.flush();
-                                                      IsClockStop2 = true;
-                                                      //mConnectedThread=null;
-                                                      FinPulsos2.setBackgroundColor(Color.RED);
-                                                  }
+            public void onClick(View arg0) {
+                try {
+                    if (IsConnected) {
+                        miByteArrayWrite[0] = 0x43;//"C"
+                        outputStream.write(miByteArrayWrite[0]);
+                        outputStream.flush();
 
-                                              } catch (Exception createException) {
-                                                  Log.d("APP", "no hay datos de fecha");
-                                              }
+                        IsClockStop2 = true;
 
-                                          }
+                        //  Restaurar botón a estado inicial
+                        InicioPulsos2.setText("INICIAR");
+                        InicioPulsos2.setBackgroundColor(Color.BLUE);
 
-                                      }
-        );
+                        FinPulsos2.setBackgroundColor(Color.RED);
+                    }
+                } catch (Exception createException) {
+                    Log.d("APP", "no hay datos de fecha");
+                }
+            }
+        });
 
         Disconnect = (Button) findViewById(R.id.buttonDisconnect);
         Disconnect.setOnClickListener(new Button.OnClickListener() {
