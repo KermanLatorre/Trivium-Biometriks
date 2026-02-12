@@ -6,6 +6,8 @@ package com.example.triviumgor;
 import static android.graphics.Color.RED;
 import static java.time.Instant.*;
 
+import android.content.res.ColorStateList;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,73 +15,73 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-    import android.content.Intent;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-    import android.database.Cursor;
-    import android.graphics.Color;
-    import android.os.Build;
-    import android.os.Handler;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-    import android.widget.AdapterView;
-    import android.widget.ArrayAdapter;
-    import android.widget.ListView;
-    import android.widget.Spinner;
-    import android.widget.Switch;
-    import android.widget.TextView;
-    import android.widget.Button;
-    import android.bluetooth.BluetoothAdapter;
-    import android.bluetooth.BluetoothDevice;
-    import android.bluetooth.BluetoothSocket;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Button;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 
-    import java.io.BufferedReader;
-    import java.io.InputStream;
-    import java.io.InputStreamReader;
-    import java.io.OutputStream;
-    import java.text.SimpleDateFormat;
-    import java.util.ArrayList;
-    import java.util.Set;
-    import java.util.UUID;
-    import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
+import java.io.IOException;
 
-    import android.widget.Toast;
-    import android.widget.EditText;
-    import android.util.Log;
-    import android.os.Bundle;
+import android.widget.Toast;
+import android.widget.EditText;
+import android.util.Log;
+import android.os.Bundle;
 
-    import java.time.Instant;
-    import java.time.ZoneId;
-    import java.time.ZonedDateTime;
-    import java.util.Calendar;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 
-    //import Kerman y Aitor
+//import Kerman y Aitor
 
 
-    import android.view.LayoutInflater;
+import android.view.LayoutInflater;
 
-    import androidx.appcompat.app.AlertDialog;
-    import androidx.core.app.ActivityCompat;
-    import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-    import com.example.triviumgor.database.PacienteDBHelper;
-    import com.example.triviumgor.database.PacienteDataManager;
+import com.example.triviumgor.database.PacienteDBHelper;
+import com.example.triviumgor.database.PacienteDataManager;
 
-    import android.view.KeyEvent;
-    import android.view.inputmethod.EditorInfo;
-    import android.Manifest;
-    import android.os.Environment;
-    import android.provider.Settings;
-    import android.net.Uri;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
+import android.Manifest;
+import android.os.Environment;
+import android.provider.Settings;
+import android.net.Uri;
 import androidx.appcompat.widget.Toolbar;
 
 //private int valor = 0; // Inicializar al declarar
 
 
- public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
     String[] DirMacs = new String[10];
     int indiceDirMACs = 0;
     private final String NombreFichero = "dir_macs.txt";
@@ -246,11 +248,32 @@ spinnerMAC.setAdapter(adapter);
     private static final int ALL_FILES_ACCESS_CODE = 102;
     private static final int BLUETOOTH_PERMISSION_CODE = 103;
 
-     private SharedPreferences sharedPreferences;
-     private Toolbar toolbar;
+    private SharedPreferences sharedPreferences;
+    private Toolbar toolbar;
 
 
     //TERMINA CAMBIO
+
+    // ============================================================
+    // HELPER: Cambiar color de botón SIN destruir el drawable Material3
+    // Usa setBackgroundTintList en vez de setBackgroundColor
+    // ============================================================
+    private void setButtonColor(Button btn, int color) {
+        androidx.core.view.ViewCompat.setBackgroundTintList(btn, ColorStateList.valueOf(color));
+    }
+
+    // Restaurar botón al color por defecto del tema Material3 (colorPrimary = #6750A4)
+    private void resetButtonToDefault(Button btn) {
+        androidx.core.view.ViewCompat.setBackgroundTintList(btn, ColorStateList.valueOf(Color.parseColor("#6750A4")));
+        btn.setTextColor(Color.WHITE);
+    }
+
+    // Colores semánticos reutilizables para estados de botón
+    private static final int COLOR_CONECTANDO = 0xFFFF5733;  // Naranja
+    private static final int COLOR_CONECTADO  = Color.YELLOW;
+    private static final int COLOR_SESION_ACTIVA = Color.GREEN;
+    private static final int COLOR_SESION_PARADA = Color.RED;
+    private static final int COLOR_DESHABILITADO = Color.LTGRAY;
 
 
 
@@ -367,7 +390,7 @@ spinnerMAC.setAdapter(adapter);
         Conexion.setOnClickListener(new Button.OnClickListener() {
 
                                         public void onClick(View arg0) {
-                                            Conexion.setBackgroundColor(0xFFFF5733);
+                                            setButtonColor(Conexion, COLOR_CONECTANDO);
                                             Conexion.setText("conectando");
                                             handler.postDelayed(new Runnable() {
                                                 @Override
@@ -413,7 +436,7 @@ spinnerMAC.setAdapter(adapter);
         Conexion2.setOnClickListener(new Button.OnClickListener() {
 
                                          public void onClick(View arg0) {
-                                             Conexion2.setBackgroundColor(0xFFFF5733);
+                                             setButtonColor(Conexion2, COLOR_CONECTANDO);
                                              Conexion2.setText("conectando");
                                              handler.postDelayed(new Runnable() {
                                                  @Override
@@ -573,7 +596,7 @@ spinnerMAC.setAdapter(adapter);
             public void onClick(View arg0) {
                 try {
                     if (IsConnected3) {
-                        InicioPulsos.setBackgroundColor(Color.GREEN);
+                        setButtonColor(InicioPulsos, COLOR_SESION_ACTIVA);
 
                         Intensidad = Integer.parseInt(Param3.getText().toString());
                         Duracion_Min = Integer.parseInt(Param4.getText().toString());
@@ -797,7 +820,7 @@ spinnerMAC.setAdapter(adapter);
             public void onClick(View arg0) {
                 try {
                     if (IsConnected) {
-                        InicioPulsos2.setBackgroundColor(Color.GREEN);
+                        setButtonColor(InicioPulsos2, COLOR_SESION_ACTIVA);
 
                         Intensidad = Integer.parseInt(Param10.getText().toString());
                         Duracion_Min2 = Integer.parseInt(Param12.getText().toString());
@@ -1018,7 +1041,6 @@ spinnerMAC.setAdapter(adapter);
                                              try {
 
                                                  if (IsConnected3) {
-                                                     InicioPulsos.setBackgroundColor(Color.BLUE);
                                                      miByteArrayWrite[0] = 0x43;//"C"
                                                      outputStream3.write(miByteArrayWrite[0]);
                                                      outputStream3.flush();
@@ -1028,8 +1050,8 @@ spinnerMAC.setAdapter(adapter);
 
                                                      //  Restaurar botón a estado inicial
                                                      InicioPulsos.setText("INICIAR");
-                                                     InicioPulsos.setBackgroundColor(Color.BLUE);
-                                                     FinPulsos.setBackgroundColor(Color.RED);
+                                                     resetButtonToDefault(InicioPulsos);
+                                                     setButtonColor(FinPulsos, COLOR_SESION_PARADA);
                                                  }
 
                                              }catch (Exception createException) {
@@ -1054,9 +1076,9 @@ spinnerMAC.setAdapter(adapter);
 
                         //  Restaurar botón a estado inicial
                         InicioPulsos2.setText("Iniciar");
-                        InicioPulsos2.setBackgroundColor(Color.BLUE);
+                        resetButtonToDefault(InicioPulsos2);
 
-                        FinPulsos2.setBackgroundColor(Color.RED);
+                        setButtonColor(FinPulsos2, COLOR_SESION_PARADA);
                     }
                 } catch (Exception createException) {
                     Log.d("APP", "no hay datos de fecha");
@@ -1097,7 +1119,7 @@ spinnerMAC.setAdapter(adapter);
                     mostrarDialogoParaGuardar2dispositivos();
                 } else {
                     if (nombrePaciente != null && !nombrePaciente.isEmpty() && DNIpaciente != null && !DNIpaciente.isEmpty()||
-                    nombrePaciente2 != null && !nombrePaciente2.isEmpty() && DNIpaciente2 != null && !DNIpaciente2.isEmpty()){
+                            nombrePaciente2 != null && !nombrePaciente2.isEmpty() && DNIpaciente2 != null && !DNIpaciente2.isEmpty()){
                         mostrarDialogoParaGuardar();
                     }else{
                         Toast.makeText(MainActivity.this, "No hay ningun paciente conectado a los dispositivos", Toast.LENGTH_SHORT);
@@ -1175,34 +1197,34 @@ spinnerMAC.setAdapter(adapter);
         sharedPreferences = getSharedPreferences("LoginPrefs", MODE_PRIVATE);
     }
 
-     @Override
-     public boolean onCreateOptionsMenu(Menu menu) {
-         // Agregar opción de cerrar sesión en el menú
-         menu.add(0, 1, 0, "Cerrar Sesión");
-         return true;
-     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Agregar opción de cerrar sesión en el menú
+        menu.add(0, 1, 0, "Cerrar Sesión");
+        return true;
+    }
 
-     @Override
-     public boolean onOptionsItemSelected(MenuItem item) {
-         if (item.getItemId() == 1) {
-             logout();
-             return true;
-         }
-         return super.onOptionsItemSelected(item);
-     }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == 1) {
+            logout();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-     private void logout() {
-         // Limpiar estado de login
-         SharedPreferences.Editor editor = sharedPreferences.edit();
-         editor.putBoolean("isLoggedIn", false);
-         editor.apply();
+    private void logout() {
+        // Limpiar estado de login
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("isLoggedIn", false);
+        editor.apply();
 
-         // Volver a LoginActivity
-         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-         startActivity(intent);
-         finish();
-     }
+        // Volver a LoginActivity
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
 
     private void checkStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -1573,7 +1595,7 @@ spinnerMAC.setAdapter(adapter);
                     try {
                         if (IsConnected3) {
                             if (!IsClockStop) {
-                                InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                                setButtonColor(InicioPulsos, COLOR_DESHABILITADO);
                                 miByteArrayWrite[0] = 0x43;
                                 outputStream3.write(miByteArrayWrite[0]);
                                 outputStream3.flush();
@@ -1586,14 +1608,14 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected3 = false;
 
-                            Conexion.setBackgroundColor(Color.BLUE);
-                            Conexion.setTextColor(Color.WHITE);
+                            resetButtonToDefault(Conexion);
                             Conexion.setText("Conectar");
 
 
                             InicioPulsos.setEnabled(false);
-                            InicioPulsos.setBackgroundColor(Color.LTGRAY);
+                            setButtonColor(InicioPulsos, COLOR_DESHABILITADO);
                             InicioPulsos.setText("Iniciar");
+                            resetButtonToDefault(FinPulsos);
                         }
                     } catch (IOException e) {
                         Toast.makeText(this, "Error al Intentar Desconectar", Toast.LENGTH_LONG).show();
@@ -1606,7 +1628,7 @@ spinnerMAC.setAdapter(adapter);
                     try {
                         if (IsConnected) {
                             if (!IsClockStop2) {
-                                InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                                setButtonColor(InicioPulsos2, COLOR_DESHABILITADO);
                                 miByteArrayWrite[0] = 0x43;
                                 outputStream.write(miByteArrayWrite[0]);
                                 outputStream.flush();
@@ -1620,13 +1642,13 @@ spinnerMAC.setAdapter(adapter);
 
                             IsConnected = false;
 
-                            Conexion2.setBackgroundColor(Color.BLUE);
-                            Conexion2.setTextColor(Color.WHITE);
+                            resetButtonToDefault(Conexion2);
                             Conexion2.setText("Conectar");
 
                             InicioPulsos2.setEnabled(false);
-                            InicioPulsos2.setBackgroundColor(Color.LTGRAY);
+                            setButtonColor(InicioPulsos2, COLOR_DESHABILITADO);
                             InicioPulsos2.setText("Iniciar");
+                            resetButtonToDefault(FinPulsos2);
 
                         }
                     }
@@ -1883,10 +1905,11 @@ spinnerMAC.setAdapter(adapter);
                     IsConnected3 = true;
                     IsBattMon3 = true;
                     //N_Deviceconnected1=ndevices;
-                    Conexion.setBackgroundColor(Color.YELLOW);
+                    setButtonColor(Conexion, COLOR_CONECTADO);
                     Conexion.setTextColor(Color.BLACK);
                     Conexion.setText("conectado");
                     InicioPulsos.setEnabled(true);
+                    resetButtonToDefault(InicioPulsos);
 
                     String nomBlueDis = device.getName() + "(" + device.getAddress().substring(device.getAddress().length() -5, device.getAddress().length()) +")";
 
@@ -1898,8 +1921,7 @@ spinnerMAC.setAdapter(adapter);
                     mInputStream3 = btSocket3.getInputStream();
 
                 } catch (Exception createException) {
-                    Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                    Conexion.setTextColor(Color.WHITE);
+                    resetButtonToDefault(Conexion);
                     Conexion.setText("Conectar");
 
 
@@ -1923,10 +1945,11 @@ spinnerMAC.setAdapter(adapter);
                     btSocket.connect();
                     IsConnected = true;
                     IsBattMon = true;
-                    Conexion2.setBackgroundColor(Color.YELLOW);
+                    setButtonColor(Conexion2, COLOR_CONECTADO);
                     Conexion2.setTextColor(Color.BLACK);
                     Conexion2.setText("conectado");
                     InicioPulsos2.setEnabled(true);
+                    resetButtonToDefault(InicioPulsos2);
 
                     String nomBlueDis2 = device.getName() + "(" + device.getAddress().substring(device.getAddress().length() -5, device.getAddress().length()) +")";
 
@@ -1939,8 +1962,7 @@ spinnerMAC.setAdapter(adapter);
 
                 } catch (Exception createException) {
 
-                    Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                    Conexion2.setTextColor(Color.WHITE);
+                    resetButtonToDefault(Conexion2);
                     Conexion2.setText("Conectar");
                     Toast.makeText(MainActivity.this, "Fallo al conectarse", Toast.LENGTH_SHORT).show();
                 }
@@ -2306,7 +2328,7 @@ spinnerMAC.setAdapter(adapter);
                                     IsConnected3 = true;
                                     IsBattMon3 = true;
                                     N_Deviceconnected1=ndevices;
-                                    Conexion.setBackgroundColor(Color.YELLOW);
+                                    setButtonColor(Conexion, COLOR_CONECTADO);
                                     Conexion.setTextColor(Color.BLACK);
                                     Conexion.setText("conectado");
                                     ndevices=indiceDirMACs;
@@ -2397,7 +2419,7 @@ spinnerMAC.setAdapter(adapter);
                                     btSocket.connect();
                                     IsConnected = true;
                                     IsBattMon = true;
-                                    Conexion2.setBackgroundColor(Color.YELLOW);
+                                    setButtonColor(Conexion2, COLOR_CONECTADO);
                                     Conexion2.setTextColor(Color.BLACK);
                                     Conexion2.setText("conectado");
                                     ndevices=indiceDirMACs;
@@ -2434,59 +2456,69 @@ spinnerMAC.setAdapter(adapter);
 
     }
 
-     private final BroadcastReceiver bluetoothDisconnectReceiver = new BroadcastReceiver() {
-         @Override
-         public void onReceive(Context context, Intent intent) {
-             String action = intent.getAction();
-             if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+    private final BroadcastReceiver bluetoothDisconnectReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-                 if (device != null) {
-                     String mac = device.getAddress();
+                if (device != null) {
+                    String mac = device.getAddress();
 
-                     // Dispositivo 1 (usa address3 y btSocket3)
-                     if (mac.equals(address3)) {
-                         if (mConnectedThread != null) {
-                             mConnectedThread.cancel();
-                             mConnectedThread = null;
+                    // Dispositivo 1 (usa address3 y btSocket3)
+                    if (mac.equals(address3) && IsConnected3) {
+                        if (mConnectedThread != null) {
+                            mConnectedThread.cancel();
+                            mConnectedThread = null;
 
-                         }
-                         IsConnected3 = false;
-                         runOnUiThread(() -> {
-                             Conexion.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                             Conexion.setTextColor(Color.WHITE);
-                             Conexion.setText("Conectar");
-                             dispBluetoothNom1.setText("");
-                             dispBluetoothNom1.setVisibility(View.GONE);
-                             InicioPulsos.setEnabled(false);
-
-                         });
-                     }
-                     // Dispositivo 2 (usa address y btSocket)
-                     else if (mac.equals(address)) {
-                         if (mConnectedThread2 != null) {
-                             mConnectedThread2.cancel();
-                             mConnectedThread2 = null;
-                         }
-                         try {
-                             if (btSocket != null) btSocket.close();
-                         } catch (IOException e) {
-                             e.printStackTrace();
-                         }
-                         IsConnected = false;
-                         runOnUiThread(() -> {
-                             Conexion2.setBackgroundColor(ventanaPaciente.getHighlightColor());
-                             Conexion2.setTextColor(Color.WHITE);
-                             Conexion2.setText("Conectar");
-                             dispBluetoothNom2.setText("");
-                             dispBluetoothNom2.setVisibility(View.GONE);
-                             InicioPulsos2.setEnabled(false);
-                         });
-                     }
-                 }
-             }
-         }
-     };
+                        }
+                        try {
+                            if (btSocket3 != null) btSocket3.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        IsConnected3 = false;
+                        address3 = "";
+                        runOnUiThread(() -> {
+                            resetButtonToDefault(Conexion);
+                            Conexion.setText("Conectar");
+                            dispBluetoothNom1.setText("");
+                            dispBluetoothNom1.setVisibility(View.GONE);
+                            InicioPulsos.setEnabled(false);
+                            setButtonColor(InicioPulsos, COLOR_DESHABILITADO);
+                            InicioPulsos.setText("Iniciar");
+                            resetButtonToDefault(FinPulsos);
+                        });
+                    }
+                    // Dispositivo 2 (usa address y btSocket)
+                    else if (mac.equals(address) && IsConnected) {
+                        if (mConnectedThread2 != null) {
+                            mConnectedThread2.cancel();
+                            mConnectedThread2 = null;
+                        }
+                        try {
+                            if (btSocket != null) btSocket.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        IsConnected = false;
+                        address = "";
+                        runOnUiThread(() -> {
+                            resetButtonToDefault(Conexion2);
+                            Conexion2.setText("Conectar");
+                            dispBluetoothNom2.setText("");
+                            dispBluetoothNom2.setVisibility(View.GONE);
+                            InicioPulsos2.setEnabled(false);
+                            setButtonColor(InicioPulsos2, COLOR_DESHABILITADO);
+                            InicioPulsos2.setText("Iniciar");
+                            resetButtonToDefault(FinPulsos2);
+                        });
+                    }
+                }
+            }
+        }
+    };
     private class ConnectedThread extends Thread
     {
         public void cancel() {
