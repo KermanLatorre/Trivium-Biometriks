@@ -74,8 +74,9 @@ import android.view.View;
     import android.os.Environment;
     import android.provider.Settings;
     import android.net.Uri;
+import androidx.appcompat.widget.Toolbar;
 
-    //private int valor = 0; // Inicializar al declarar
+//private int valor = 0; // Inicializar al declarar
 
 
  public class MainActivity extends AppCompatActivity {
@@ -246,6 +247,7 @@ spinnerMAC.setAdapter(adapter);
     private static final int BLUETOOTH_PERMISSION_CODE = 103;
 
      private SharedPreferences sharedPreferences;
+     private Toolbar toolbar;
 
 
     //TERMINA CAMBIO
@@ -1165,7 +1167,9 @@ spinnerMAC.setAdapter(adapter);
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(bluetoothDisconnectReceiver, filter);
 
-
+        // Configurar el Toolbar
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         // Inicializar SharedPreferences
         sharedPreferences = getSharedPreferences("LoginPrefs", MODE_PRIVATE);
