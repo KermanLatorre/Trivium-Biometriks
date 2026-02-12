@@ -249,6 +249,9 @@ spinnerMAC.setAdapter(adapter);
     private static final int BLUETOOTH_PERMISSION_CODE = 103;
 
     private SharedPreferences sharedPreferences;
+    private String rolUsuario;
+    private String nombreCompleto;
+    private String username;
     private Toolbar toolbar;
 
 
@@ -1195,21 +1198,90 @@ spinnerMAC.setAdapter(adapter);
 
         // Inicializar SharedPreferences
         sharedPreferences = getSharedPreferences("LoginPrefs", MODE_PRIVATE);
+
+        // Obtener información del usuario logueado
+        username = sharedPreferences.getString("username", "Usuario");
+        rolUsuario = sharedPreferences.getString("rol", "medico");
+        nombreCompleto = sharedPreferences.getString("nombreCompleto", username);
+
+        // Mostrar información del usuario en el título
+        setTitle("Bienvenido, " + nombreCompleto);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Agregar opción de cerrar sesión en el menú
-        menu.add(0, 1, 0, "Cerrar Sesión");
+        // Obtener rol del usuario
+        String rol = sharedPreferences.getString("rol", "");
+
+        // ==== MENÚ COMÚN PARA TODOS ====
+        menu.add(0, 10, 10, "👥 Ver Pacientes");
+
+        // ==== MENÚ SOLO PARA ADMIN ====
+        if ("admin".equals(rol)) {
+            menu.add(0, 1, 1, "⚙️ Administrar Usuarios");
+            menu.add(0, 12, 12, "📊 Reportes Completos");
+        }
+
+        // ==== MENÚ PARA ADMIN Y MÉDICOS ====
+        if ("admin".equals(rol) || "medico".equals(rol)) {
+            menu.add(0, 11, 11, "➕ Nuevo Paciente");
+        }
+
+        // ==== MENÚ COMÚN - CERRAR SESIÓN ====
+        menu.add(0, 2, 99, "🚪 Cerrar Sesión");
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == 1) {
+        int itemId = item.getItemId();
+
+        if (itemId == 1) {
+            // Administrar Usuarios (SOLO ADMIN)
+            if ("admin".equals(rolUsuario)) {
+                Intent intent = new Intent(MainActivity.this, AdminUsuariosActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "⛔ Acceso denegado. Solo administradores.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return true;
+
+        } else if (itemId == 2) {
+            // Cerrar Sesión
             logout();
             return true;
+
+        } else if (itemId == 10) {
+            // Ver Pacientes (TODOS)
+            Toast.makeText(this, "Mostrando lista de pacientes...", Toast.LENGTH_SHORT).show();
+            // Aquí va tu código para mostrar pacientes
+            return true;
+
+        } else if (itemId == 11) {
+            // Nuevo Paciente (ADMIN y MÉDICOS)
+            if ("admin".equals(rolUsuario) || "medico".equals(rolUsuario)) {
+                Toast.makeText(this, "Creando nuevo paciente...", Toast.LENGTH_SHORT).show();
+                // Aquí va tu código para crear paciente
+            } else {
+                Toast.makeText(this, "⛔ Acceso denegado. Solo médicos y administradores.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return true;
+
+        } else if (itemId == 12) {
+            // Reportes Completos (SOLO ADMIN)
+            if ("admin".equals(rolUsuario)) {
+                Toast.makeText(this, "Abriendo reportes completos...", Toast.LENGTH_SHORT).show();
+                // Aquí va tu código para reportes
+            } else {
+                Toast.makeText(this, "⛔ Acceso denegado. Solo administradores.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -1217,6 +1289,10 @@ spinnerMAC.setAdapter(adapter);
         // Limpiar estado de login
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoggedIn", false);
+        editor.remove("username");
+        editor.remove("rol");
+        editor.remove("nombreCompleto");
+        editor.remove("userId");
         editor.apply();
 
         // Volver a LoginActivity
@@ -1224,6 +1300,8 @@ spinnerMAC.setAdapter(adapter);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+
+        Toast.makeText(this, "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show();
     }
 
     private void checkStoragePermissions() {

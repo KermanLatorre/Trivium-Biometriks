@@ -45,16 +45,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- LoginActivity como actividad principal (LAUNCHER) -->
+        <!-- LoginActivity como actividad principal -->
         <activity
             android:name=".LoginActivity"
             android:exported="false" />
+
         <!-- MainActivity como actividad secundaria -->
         <activity
             android:name=".MainActivity"
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="landscape" />
+        <!-- AdminUsuariosActivity - SOLO PARA ADMIN -->
+        <activity
+            android:name=".AdminUsuariosActivity"
+            android:exported="false"
+            android:label="Administrar Usuarios"
+            android:parentActivityName=".MainActivity" />
+
+
         <activity
             android:name=".ventanaPaciente"
             android:configChanges="orientation|screenSize|keyboardHidden"

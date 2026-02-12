@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.triviumgor.database.PacienteDBHelper;
 import com.example.triviumgor.database.PacienteDataManager;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -82,10 +84,20 @@ public class LoginActivity extends AppCompatActivity {
 
         // Verificar credenciales en la base de datos
         if (dataManager.verificarCredenciales(username, password)) {
-            // Login exitoso
-            saveLoginState(true, username);
-            Toast.makeText(this, "Bienvenido, " + username, Toast.LENGTH_SHORT).show();
-            navigateToMain();
+            // Obtener información completa del usuario
+            Cursor cursor = dataManager.obtenerUsuario(username);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                String rol = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_ROL));
+                String nombreCompleto = cursor.getString(cursor.getColumnIndex(PacienteDBHelper.COLUMN_NOMBRE_COMPLETO));
+                int userId = cursor.getInt(cursor.getColumnIndex(PacienteDBHelper.COLUMN_USUARIO_ID));
+                cursor.close();
+
+                // Login exitoso - Guardar toda la información
+                saveLoginState(true, username, rol, nombreCompleto, userId);
+                Toast.makeText(this, "Bienvenido, " + nombreCompleto, Toast.LENGTH_SHORT).show();
+                navigateToMain();
+            }
         } else {
             // Login fallido
             tvError.setText("Usuario o contraseña incorrectos");
@@ -99,10 +111,14 @@ public class LoginActivity extends AppCompatActivity {
         return sharedPreferences.getBoolean("isLoggedIn", false);
     }
 
-    private void saveLoginState(boolean isLoggedIn, String username) {
+    private void saveLoginState(boolean isLoggedIn, String username, String rol,
+                                String nombreCompleto, int userId) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoggedIn", isLoggedIn);
         editor.putString("username", username);
+        editor.putString("rol", rol);
+        editor.putString("nombreCompleto", nombreCompleto);
+        editor.putInt("userId", userId);
         editor.apply();
     }
 
